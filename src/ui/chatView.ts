@@ -291,13 +291,17 @@ export class ChatView implements vscode.WebviewViewProvider {
         const userContent = ctx
             ? `${text}\n\n---\n**Editor context:**\n${ctx}`
             : text;
-        const systemPrompt = `You are OnlySq CLI, a coding assistant inside VS Code.
+        const cfg = settings();
+        let systemPrompt = `You are OnlySq CLI, a coding assistant inside VS Code.
 - Answer in Markdown with fenced code blocks (\`\`\`lang).
 - "This file" / "selection" refers to the active editor context provided.
 - Be concise. Prefer code over prose when code is the answer.
 
 --- System context ---
 ${systemBriefForLLM()}`;
+        if (cfg.customSystemPrompt) {
+            systemPrompt += `\n\n--- Custom context ---\n${cfg.customSystemPrompt}`;
+        }
         const messages: ChatMessage[] = [
             { role: "system", content: systemPrompt },
             ...this.history,
@@ -307,8 +311,8 @@ ${systemBriefForLLM()}`;
         let acc = "";
         for await (const d of this.client.stream(
             {
-                model: settings().chatModel,
-                temperature: settings().temperature,
+                model: cfg.chatModel,
+                temperature: cfg.temperature,
                 messages: [
                     { role: "system", content: systemPrompt },
                     ...this.history,

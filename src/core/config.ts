@@ -56,6 +56,7 @@ export interface Settings {
     parallelTools: boolean;
     toolCache: boolean;
     persistHistory: boolean;
+    customSystemPrompt: string;
 }
 
 export function settings(): Settings {
@@ -83,6 +84,7 @@ export function settings(): Settings {
         parallelTools: c.get("agent.parallelTools", true),
         toolCache: c.get("agent.toolCache", true),
         persistHistory: c.get("chat.persistHistory", true),
+        customSystemPrompt: c.get("customSystemPrompt", ""),
     };
 }
 
