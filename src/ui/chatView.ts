@@ -305,7 +305,7 @@ ${systemBriefForLLM()}`;
         const messages: ChatMessage[] = [
             { role: "system", content: systemPrompt },
             ...this.history,
-            { role: "user", content: text },
+            { role: "user", content: userContent },
         ];
 
         let acc = "";
@@ -313,11 +313,7 @@ ${systemBriefForLLM()}`;
             {
                 model: cfg.chatModel,
                 temperature: cfg.temperature,
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    ...this.history,
-                    { role: "user", content: userContent },
-                ],
+                messages,
             },
             signal
         )) {
