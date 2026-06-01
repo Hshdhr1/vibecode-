@@ -1,0 +1,273 @@
+{
+    "name": "onlysq-cli",
+    "displayName": "OnlySq CLI",
+    "description": "AI coding assistant by OnlySq — inline completions, chat, and agent mode with native diff previews",
+    "version": "0.1.0",
+    "publisher": "subashev",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/imsudoer/onlysq-cli.git"
+    },
+    "icon": "media/icon.png",
+    "engines": {
+        "vscode": "^1.85.0"
+    },
+    "categories": [
+        "Programming Languages",
+        "Machine Learning",
+        "Other"
+    ],
+    "keywords": [
+        "ai",
+        "copilot",
+        "completion",
+        "chat",
+        "agent",
+        "onlysq"
+    ],
+    "main": "./dist/extension.js",
+    "activationEvents": [
+        "onStartupFinished"
+    ],
+    "contributes": {
+        "commands": [
+            {
+                "command": "onlysq.signIn",
+                "title": "Sign In",
+                "category": "OnlySq"
+            },
+            {
+                "command": "onlysq.signOut",
+                "title": "Sign Out",
+                "category": "OnlySq"
+            },
+            {
+                "command": "onlysq.openChat",
+                "title": "Open Chat",
+                "category": "OnlySq"
+            },
+            {
+                "command": "onlysq.openSettings",
+                "title": "Open Settings",
+                "category": "OnlySq"
+            },
+            {
+                "command": "onlysq.runAgent",
+                "title": "Run Agent…",
+                "category": "OnlySq"
+            },
+            {
+                "command": "onlysq.explainSelection",
+                "title": "Explain Selection",
+                "category": "OnlySq"
+            },
+            {
+                "command": "onlysq.refactorSelection",
+                "title": "Refactor Selection",
+                "category": "OnlySq"
+            },
+            {
+                "command": "onlysq.selectModel",
+                "title": "Select Chat Model",
+                "category": "OnlySq"
+            },
+            {
+                "command": "onlysq.selectCompletionModel",
+                "title": "Select Completion Model",
+                "category": "OnlySq"
+            },
+            {
+                "command": "onlysq.refreshModels",
+                "title": "Refresh Models",
+                "category": "OnlySq"
+            },
+            {
+                "command": "onlysq.resetUsage",
+                "title": "Reset Token Usage",
+                "category": "OnlySq"
+            },
+            {
+                "command": "onlysq.showLog",
+                "title": "Show Log",
+                "category": "OnlySq"
+            }
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "onlysq",
+                    "title": "OnlySq CLI",
+                    "icon": "media/icon-mono.svg"
+                }
+            ]
+        },
+        "views": {
+            "onlysq": [
+                {
+                    "type": "webview",
+                    "id": "onlysq.chat",
+                    "name": "",
+                    "contextualTitle": "OnlySq"
+                },
+                {
+                    "type": "webview",
+                    "id": "onlysq.settings",
+                    "name": "Settings",
+                    "contextualTitle": "OnlySq"
+                }
+            ]
+        },
+        "menus": {
+            "editor/context": [
+                {
+                    "command": "onlysq.explainSelection",
+                    "group": "onlysq@1",
+                    "when": "editorHasSelection"
+                },
+                {
+                    "command": "onlysq.refactorSelection",
+                    "group": "onlysq@2",
+                    "when": "editorHasSelection"
+                }
+            ]
+        },
+        "keybindings": [
+            {
+                "command": "onlysq.openChat",
+                "key": "ctrl+alt+o",
+                "mac": "cmd+alt+o"
+            }
+        ],
+        "configuration": {
+            "title": "OnlySq CLI",
+            "properties": {
+                "onlysq.chatModel": {
+                    "type": "string",
+                    "default": "gpt-4o-mini",
+                    "description": "Model for chat and agent."
+                },
+                "onlysq.completionModel": {
+                    "type": "string",
+                    "default": "gpt-4o-mini",
+                    "description": "Model for inline completions."
+                },
+                "onlysq.inlineCompletions.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable inline code completions."
+                },
+                "onlysq.inlineCompletions.autoTrigger": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Trigger completions automatically as you type."
+                },
+                "onlysq.inlineCompletions.linesBefore": {
+                    "type": "number",
+                    "default": 80,
+                    "minimum": 10,
+                    "maximum": 500
+                },
+                "onlysq.inlineCompletions.linesAfter": {
+                    "type": "number",
+                    "default": 40,
+                    "minimum": 0,
+                    "maximum": 200
+                },
+                "onlysq.temperature": {
+                    "type": "number",
+                    "default": 0.3,
+                    "minimum": 0,
+                    "maximum": 2
+                },
+                "onlysq.agent.maxSteps": {
+                    "type": "number",
+                    "default": 25,
+                    "minimum": 1,
+                    "maximum": 100
+                },
+                "onlysq.agent.parallelTools": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Run independent tool calls in parallel."
+                },
+                "onlysq.agent.toolCache": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Cache identical read-only tool results within a single agent run."
+                },
+                "onlysq.chat.persistHistory": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Persist chat history between VS Code sessions."
+                },
+                "onlysq.approval.write": {
+                    "type": "string",
+                    "enum": [
+                        "always",
+                        "ask",
+                        "never"
+                    ],
+                    "default": "ask",
+                    "description": "Approval for file writes (propose_edit, patch_file, apply_at_line)."
+                },
+                "onlysq.approval.delete": {
+                    "type": "string",
+                    "enum": [
+                        "always",
+                        "ask",
+                        "never"
+                    ],
+                    "default": "ask",
+                    "description": "Approval for file deletions."
+                },
+                "onlysq.approval.rename": {
+                    "type": "string",
+                    "enum": [
+                        "always",
+                        "ask",
+                        "never"
+                    ],
+                    "default": "ask",
+                    "description": "Approval for file renames."
+                },
+                "onlysq.approval.shell": {
+                    "type": "string",
+                    "enum": [
+                        "always",
+                        "ask",
+                        "never"
+                    ],
+                    "default": "ask",
+                    "description": "Approval for shell / task execution."
+                },
+                "onlysq.approval.vscodeCommand": {
+                    "type": "string",
+                    "enum": [
+                        "always",
+                        "ask",
+                        "never"
+                    ],
+                    "default": "ask",
+                    "description": "Approval for arbitrary VS Code commands."
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run package",
+        "compile": "npm run check-types && node esbuild.js",
+        "watch": "npm-run-all -p watch:*",
+        "watch:esbuild": "node esbuild.js --watch",
+        "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+        "package": "npm run check-types && node esbuild.js --production",
+        "check-types": "tsc --noEmit",
+        "lint": "eslint src --ext ts"
+    },
+    "devDependencies": {
+        "@types/node": "20.x",
+        "@types/vscode": "^1.85.0",
+        "esbuild": "^0.24.0",
+        "npm-run-all": "^4.1.5",
+        "typescript": "^5.4.0"
+    }
+}

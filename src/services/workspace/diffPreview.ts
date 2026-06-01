@@ -1,0 +1,122 @@
+import * as vscode from "vscode";
+import * as path from "path";
+import { resolve, readText, writeText } from "./fs";
+
+class DiffContentProvider implements vscode.TextDocumentContentProvider {
+    private readonly content = new Map<string, string>();
+    private readonly _onChange = new vscode.EventEmitter<vscode.Uri>();
+    readonly onDidChange = this._onChange.event;
+
+    set(uri: vscode.Uri, text: string): void {
+        this.content.set(uri.toString(), text);
+        this._onChange.fire(uri);
+    }
+    provideTextDocumentContent(uri: vscode.Uri): string {
+        return this.content.get(uri.toString()) ?? "";
+    }
+}
+
+const SCHEME = "onlysq-diff";
+const provider = new DiffContentProvider();
+let registered = false;
+
+export function registerDiffProvider(ctx: vscode.ExtensionContext): void {
+    if (registered) return;
+    ctx.subscriptions.push(
+        vscode.workspace.registerTextDocumentContentProvider(SCHEME, provider)
+    );
+    registered = true;
+}
+
+export type ProposalState = "pending" | "applied" | "rejected";
+
+export interface ProposedChange {
+    id: string;
+    path: string;
+    newContent: string;
+    reason?: string;
+}
+
+interface StoredProposal extends ProposedChange {
+    state: ProposalState;
+    leftUri: vscode.Uri;
+    rightUri: vscode.Uri;
+    title: string;
+    exists: boolean;
+}
+
+const proposals = new Map<string, StoredProposal>();
+
+export async function createProposal(
+    change: ProposedChange
+): Promise<StoredProposal> {
+    const rel = change.path.replace(/^\/+/, "");
+    let original = "";
+    let exists = true;
+    try {
+        original = await readText(rel);
+    } catch {
+        exists = false;
+    }
+
+    const stamp = Date.now();
+    const leftUri = vscode.Uri.parse(
+        `${SCHEME}:Original/${rel}?${change.id}-${stamp}`
+    );
+    const rightUri = vscode.Uri.parse(
+        `${SCHEME}:Proposed/${rel}?${change.id}-${stamp}`
+    );
+    provider.set(leftUri, original);
+    provider.set(rightUri, change.newContent);
+
+    const stored: StoredProposal = {
+        ...change,
+        state: "pending",
+        leftUri,
+        rightUri,
+        title: `OnlySq: ${exists ? "Edit" : "Create"} ${path.basename(rel)}`,
+        exists,
+    };
+    proposals.set(change.id, stored);
+    return stored;
+}
+
+export async function showDiff(id: string): Promise<void> {
+    const p = proposals.get(id);
+    if (!p) {
+        vscode.window.showWarningMessage("OnlySq: diff not available");
+        return;
+    }
+    await vscode.commands.executeCommand(
+        "vscode.diff",
+        p.leftUri,
+        p.rightUri,
+        p.title,
+        { preview: true }
+    );
+}
+
+export async function applyProposal(id: string): Promise<boolean> {
+    const p = proposals.get(id);
+    if (!p) return false;
+    if (p.state === "applied") return true;
+    const rel = p.path.replace(/^\/+/, "");
+    await writeText(rel, p.newContent);
+    p.state = "applied";
+    provider.set(p.leftUri, p.newContent);
+    return true;
+}
+
+export function rejectProposal(id: string): void {
+    const p = proposals.get(id);
+    if (!p) return;
+    p.state = "rejected";
+}
+
+export function getProposalState(id: string): ProposalState | "unknown" {
+    return proposals.get(id)?.state ?? "unknown";
+}
+
+export function getProposal(id: string): StoredProposal | undefined {
+    return proposals.get(id);
+}

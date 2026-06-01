@@ -1,0 +1,7 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <rect width="128" height="128" rx="28" fill="#0d1117"/>
+  <g font-family="-apple-system, Segoe UI, Inter, sans-serif" font-weight="800" letter-spacing="-3">
+    <text x="64" y="84" text-anchor="middle" font-size="72" fill="#ffffff">Sq</text>
+    <circle cx="98" cy="82" r="7" fill="#fd6b03"/>
+  </g>
+</svg>
