@@ -118,7 +118,6 @@ export class ChatView implements vscode.WebviewViewProvider {
             view.onDidChangeVisibility(() => {
                 if (view.visible) {
                     void this.pushAuth();
-                    this.pushHistoryWindow("replace");
                 }
             })
         );
@@ -161,7 +160,6 @@ export class ChatView implements vscode.WebviewViewProvider {
         if (s.signed) {
             await this.pushModels();
             this.pushModel();
-            if (this.history.length) this.pushHistoryWindow("replace");
         }
     }
 
@@ -186,6 +184,7 @@ export class ChatView implements vscode.WebviewViewProvider {
         switch (m.type) {
             case "ready":
                 await this.pushAuth();
+                if (this.history.length) this.pushHistoryWindow("replace");
                 return;
 
             case "signIn":

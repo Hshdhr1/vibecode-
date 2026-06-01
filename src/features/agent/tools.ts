@@ -231,25 +231,32 @@ export const builtinTools: ToolHandler[] = [
             function: {
                 name: "apply_at_line",
                 description:
-                    "Modify a specific range of lines in a file. Use this for small, targeted edits instead of rewriting the entire file. The user reviews a native diff with Apply/Reject buttons. Line numbers are 1-based.",
+                    "Modify a specific range of lines in a file. Use this for small, targeted edits. The user reviews a native diff with Apply/Reject buttons. " +
+                    "CRITICAL: line numbers are 1-based and refer to the current file state. ALWAYS call read_file first to get correct line numbers. " +
+                    "You MUST provide expected_lines — the exact text currently on those lines — so the tool can verify you are not editing stale content. " +
+                    "If expected_lines do not match, you will get an error and must re-read the file.",
                 parameters: obj(
                     {
                         path: str("Workspace-relative path"),
                         start_line: num("First line of the range, 1-based"),
                         end_line: num(
-                            "Last line, inclusive. Defaults to start_line. Ignored for insert modes."
+                            "Last line, inclusive. Defaults to start_line. Ignored for insert_before/insert_after."
                         ),
                         replacement: str(
-                            "Text to insert or replace with (can span multiple lines)"
+                            "Text to insert or replace with (can span multiple lines, no trailing newline)"
                         ),
                         mode: {
                             type: "string",
                             enum: ["replace", "insert_before", "insert_after"],
                             description: 'Default "replace"',
                         },
+                        expected_lines: arr(
+                            str(""),
+                            "REQUIRED. The exact current content of lines [start_line .. end_line], one element per line, as a verification anchor."
+                        ),
                         reason: str("Short summary shown to the user"),
                     },
-                    ["path", "start_line", "replacement"]
+                    ["path", "start_line", "replacement", "expected_lines"]
                 ),
             },
         },
@@ -265,9 +272,15 @@ export const builtinTools: ToolHandler[] = [
                         a.mode === "insert_before" || a.mode === "insert_after"
                             ? a.mode
                             : "replace",
+                    expectedLines: Array.isArray(a.expected_lines)
+                        ? a.expected_lines.map((x: any) => String(x))
+                        : undefined,
                 };
                 if (!Number.isFinite(edit.startLine) || edit.startLine < 1) {
-                    return "Error: start_line must be a positive integer";
+                    return "Error: start_line must be a positive integer (1-based)";
+                }
+                if (!edit.expectedLines || !edit.expectedLines.length) {
+                    return "Error: expected_lines is required. Call read_file first, then provide the exact current content of the target lines.";
                 }
                 const preview = await previewLineEdit(edit);
                 const proposal = await createProposal({
@@ -281,7 +294,7 @@ export const builtinTools: ToolHandler[] = [
                           }`,
                 });
                 void showDiff(proposal.id);
-                return `Proposed ${edit.mode} at ${edit.path}:${edit.startLine}. Awaiting user review.`;
+                return `Proposed ${edit.mode} at ${edit.path}:${edit.startLine}. Awaiting user review.\n\nReplaced content:\n${preview.originalRange}`;
             } catch (e: any) {
                 return `Error: ${e?.message ?? e}`;
             }
