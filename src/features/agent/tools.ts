@@ -710,4 +710,40 @@ export const builtinTools: ToolHandler[] = [
             }
         },
     },
+    {
+        def: {
+            type: "function",
+            function: {
+                name: "web_search",
+                description: "Search the web for up-to-date information.",
+                parameters: obj({ query: str("Search query") }, ["query"]),
+            },
+        },
+        run: async ({ query }: { query: string }) => {
+            try {
+                const resp = await fetch(
+                    `https://api.duckduckgo.com/?q=${encodeURIComponent(
+                        query
+                    )}&format=json`
+                );
+                const data = (await resp.json()) as any;
+                const results = [];
+                if (data.AbstractText) {
+                    results.push(`Abstract: ${data.AbstractText}`);
+                }
+                if (data.RelatedTopics && Array.isArray(data.RelatedTopics)) {
+                    for (const topic of data.RelatedTopics.slice(0, 5)) {
+                        if (topic.Text && topic.FirstURL) {
+                            results.push(`- ${topic.Text} (${topic.FirstURL})`);
+                        }
+                    }
+                }
+                return results.length
+                    ? results.join("\n")
+                    : "No direct results found. Try a different query.";
+            } catch (e: any) {
+                return `Search error: ${e?.message ?? e}`;
+            }
+        },
+    },
 ];

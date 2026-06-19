@@ -45,7 +45,10 @@ export async function runAgent(
     const cfg = settings();
     const cache = new ToolCache(cfg.toolCache);
 
-    const systemPrompt = `${SYSTEM_BASE}\n\n--- System context ---\n${systemBriefForLLM()}`;
+    let systemPrompt = `${SYSTEM_BASE}\n\n--- System context ---\n${systemBriefForLLM()}`;
+    if (cfg.customSystemPrompt) {
+        systemPrompt += `\n\n--- Custom context ---\n${cfg.customSystemPrompt}`;
+    }
 
     const messages: ChatMessage[] = [
         { role: "system", content: systemPrompt },

@@ -200,6 +200,11 @@
                     "default": true,
                     "description": "Persist chat history between VS Code sessions."
                 },
+                "onlysq.customSystemPrompt": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Custom system prompt to append to the base prompt."
+                },
                 "onlysq.approval.write": {
                     "type": "string",
                     "enum": [
